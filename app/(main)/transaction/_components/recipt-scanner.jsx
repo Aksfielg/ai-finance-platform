@@ -1,20 +1,14 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import useFetch from "@/hooks/use-fetch";
-import { scanReceipt } from "@/actions/transaction";
 
 export function ReceiptScanner({ onScanComplete }) {
   const fileInputRef = useRef(null);
-
-  const {
-    loading: scanReceiptLoading,
-    fn: scanReceiptFn,
-    data: scannedData,
-  } = useFetch(scanReceipt);
+  const [loading, setLoading] = useState(false);
+  const [scannedData, setScannedData] = useState(null);
 
   const handleReceiptScan = async (file) => {
     if (file.size > 5 * 1024 * 1024) {
@@ -22,15 +16,38 @@ export function ReceiptScanner({ onScanComplete }) {
       return;
     }
 
-    await scanReceiptFn(file);
+    const form = new FormData();
+    form.append("file", file);
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/scan", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Scan failed");
+      }
+
+      if (data?.warning) {
+        toast.warning(data.warning);
+      } else if (!data?.fromFallback) {
+        toast.success("Receipt extracted successfully");
+      }
+
+      setScannedData(data);
+    } catch (err) {
+      toast.error(err.message || "Failed to scan receipt");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (scannedData && !scanReceiptLoading) {
+    if (scannedData && !loading) {
       onScanComplete(scannedData);
       toast.success("Receipt scanned successfully");
     }
-  }, [scanReceiptLoading, scannedData]);
+  }, [loading, scannedData]);
 
   return (
     <div className="flex items-center gap-4">
@@ -50,9 +67,9 @@ export function ReceiptScanner({ onScanComplete }) {
         variant="outline"
         className="w-full h-10 bg-gradient-to-br from-orange-500 via-pink-500 to-purple-500 animate-gradient hover:opacity-90 transition-opacity text-white hover:text-white"
         onClick={() => fileInputRef.current?.click()}
-        disabled={scanReceiptLoading}
+        disabled={loading}
       >
-        {scanReceiptLoading ? (
+        {loading ? (
           <>
             <Loader2 className="mr-2 animate-spin" />
             <span>Scanning Receipt...</span>
