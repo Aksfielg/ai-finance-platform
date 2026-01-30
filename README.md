@@ -65,45 +65,135 @@ npm run dev
 - **prisma/**: schema and migrations for the app database.
 - **emails/**: JSX templates used for transactional emails.
 
-**Notes & operational details**
-- The project uses Prisma migrations — review `prisma/migrations/` before running migrations in a production DB.
-- Seeding: you can run `actions/seed.js` or call the seed API route at `app/api/seed/route.js` to populate sample data.
-- Background processing: Inngest functions are wired under `lib/inngest` and the API route. Configure Inngest or replace with your preferred job worker for production.
+# AI Finance Platform
 
-**Development tips**
-- Tailwind config is in `tailwind.config.js` and PostCSS settings in `postcss.config.mjs`.
-- If you need to debug DB calls, `lib/prisma.js` centralizes the Prisma client instance.
+**AI Finance Platform** is a personal finance web application built with Next.js, Tailwind CSS, and Prisma. It provides account and budget tracking, transaction management (including a receipt-scanner UI), a dashboard with insights, authentication flows, background jobs, and seeding utilities.
+
+**Status:** Active development
+
+**Table of contents**
+- **Project:** short description and goals
+- **Features:** user-facing features and where to find them
+- **Tech Stack:** core technologies and libraries
+- **Quick Start:** install, run, and database steps
+- **Project Structure:** important files and pointers
+- **Migrations & Seeding:** Prisma and seed utilities
+- **Deployment:** notes for production
+- **Contributing & Next Steps**
+
+**Project**
+
+This repository implements a modern single-tenant personal finance manager with server and client components via the Next.js App Router. It focuses on core financial workflows: accounts, transactions, budgets, and a simple receipt scanning UI for fast data entry.
+
+**Features**
+- **Authentication:** Sign-in and sign-up routes under the auth app routes. See [app/(auth)](app/(auth)).
+- **Dashboard:** Overview cards, budget progress and recent transactions. See [app/(main)/dashboard](app/(main)/dashboard).
+- **Accounts:** Account list and individual account pages with charts. See [app/(main)/account](app/(main)/account).
+- **Transactions:** Create/edit transactions, paginated tables and CSV-style exports (components under [app/(main)/transaction/_components](app/(main)/transaction/_components)).
+- **Receipt scanner UI:** Client-side helper to scan receipts and create transactions quickly ([app/(main)/transaction/_components/recipt-scanner.jsx](app/(main)/transaction/_components/recipt-scanner.jsx)).
+- **Budgets:** Track budget progress and visualize usage ([app/(main)/dashboard/_components/budget-progress.jsx](app/(main)/dashboard/_components/budget-progress.jsx)).
+- **Server Actions & API Routes:** Business logic is organized in `actions/` and API routes under `app/api/` (e.g., seed and scan endpoints).
+- **Background Jobs:** Inngest integration for async/background workflows (see `lib/inngest/` and [app/api/inngest/route.js](app/api/inngest/route.js)).
+- **Email Templates:** JSX email templates in `emails/` for transactional notifications.
+
+**Tech Stack**
+- **Framework:** Next.js (App Router) — server components and file-based routing in `app/`.
+- **Language:** JavaScript (React + JSX).
+- **Styling:** Tailwind CSS and PostCSS.
+- **ORM:** Prisma (schema in [prisma/schema.prisma](prisma/schema.prisma), migrations in [prisma/migrations](prisma/migrations)).
+- **Background Jobs:** Inngest (helpers under `lib/inngest`).
+- **Utilities & Helpers:** `lib/prisma.js`, `lib/utils.js`, and `lib/arcjet.js`.
+- **UI primitives:** Local component library in `components/ui/` (buttons, inputs, table, drawer, sonner, etc.).
+
+**Quick Start (local development)**
+1. Copy `.env.example` to `.env` (create one if missing) and set required variables (at minimum `DATABASE_URL` and any auth/provider keys you plan to use).
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Prepare the database (Prisma):
+
+```bash
+# create or update migrations locally
+npx prisma migrate dev --name init
+
+# (optional) generate prisma client
+npx prisma generate
+```
+
+4. Seed sample data (optional):
+
+```bash
+# Run the seed script if present
+node actions/seed.js
+# or call the seed API route: POST /api/seed
+```
+
+5. Run the dev server:
+
+```bash
+npm run dev
+```
+
+6. Open http://localhost:3000
+
+Common scripts are defined in [package.json](package.json).
+
+**Project Structure (high level)**
+- **app/**: Next.js App Router pages and layouts. Entry points and nested routes live here (public and authenticated views are separated into route groups).
+- **components/**: Reusable UI and small presentational components. See `components/ui/` for primitives.
+- **actions/**: Server-side actions for accounts, transactions, seeding and other business logic.
+- **lib/**: Helpers and integrations (Prisma client, Inngest helpers, utility functions).
+- **prisma/**: Prisma schema and migrations. Use Prisma CLI to manage schema changes.
+- **emails/**: JSX templates for transactional emails.
+
+Key files and references:
+- `app/page.js` — landing/home page
+- `app/(auth)` — auth routes and layouts
+- `app/(main)` — main application routes (dashboard, account, transaction)
+- `actions/seed.js` — data seeding script
+- `lib/prisma.js` — Prisma client setup
+- `prisma/schema.prisma` — DB schema
+
+**Migrations & Seeding**
+- Use Prisma to create and apply migrations: `npx prisma migrate dev` for local development.
+- Review `prisma/migrations/` before applying in production.
+- Use `actions/seed.js` or the API seed route at [app/api/seed/route.js](app/api/seed/route.js) to populate demo data.
+
+**Environment variables**
+Create a `.env` at the project root with at least the database connection. Typical variables you may need:
+
+```env
+DATABASE_URL=
+NEXTAUTH_URL=
+# Any provider keys (Clerk, Resend, ArcJet, Gemini, etc.) used by the app
+```
+
+Check the repository for any `.env.example` or comments that list additional variables.
+
+**Deployment**
+- The app is ready for deployment on Vercel (recommended) or another Node host supporting Next.js.
+- In production, run `npm run build` and `npm start` (or let Vercel handle the build).
+- Ensure `DATABASE_URL` and any provider keys are configured in your host environment.
+
+**Developer notes & tips**
+- Tailwind config: `tailwind.config.js` and PostCSS config: `postcss.config.mjs`.
+- If you hit DB connection issues, ensure `lib/prisma.js` uses a singleton Prisma client to avoid connection storms (common in serverless).
+- The receipt scanner UI is purely client-side and integrates with `app/api/scan/route.js` for backend processing.
 
 **Contributing**
-- Fork, create a branch, open a PR. Keep changes focused and include small, testable commits.
+- Fork the repo, create a feature branch, add tests where appropriate, and open a PR. Keep PRs focused.
 
-**Questions or next steps**
-- Want me to run the dev server and fix errors shown on your machine? I can start it and iterate on any runtime issues.
+**Next steps I can help with**
+- Run database migrations and seed data locally.
+- Start the dev server and fix runtime errors.
+- Add a `.env.example` file documenting required environment variables.
 
 ---
 
-Updated: concise project README covering features, files and run instructions.
-# Full Stack AI Fianace Platform with Next JS, Supabase, Tailwind, Prisma, Inngest, ArcJet, Shadcn UI Tutorial 🔥🔥
-## https://youtu.be/egS6fnZAdzk
+File: [README.md](README.md)
 
-<img width="1470" alt="Screenshot 2024-12-10 at 9 45 45 AM" src="https://github.com/user-attachments/assets/1bc50b85-b421-4122-8ba4-ae68b2b61432">
-
-### Make sure to create a `.env` file with following variables -
-
-```
-DATABASE_URL=
-DIRECT_URL=
-
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
-
-GEMINI_API_KEY=
-
-RESEND_API_KEY=
-
-ARCJET_KEY=
-```
+If you'd like, I can run migrations and seed the database next. Want me to proceed?
