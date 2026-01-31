@@ -1,4 +1,4 @@
-# AI Finance Platform
+# AI Finance Platform(https://ai-finance-platform-gray.vercel.app/)
 
 A personal finance web app built with Next.js, Tailwind CSS and Prisma. It provides account and budget tracking, transaction management with receipt scanning, a dashboard overview, and authentication flows with server-side actions for seeding and background processing.
 
