@@ -194,6 +194,4 @@ Check the repository for any `.env.example` or comments that list additional var
 
 ---
 
-File: [README.md](README.md)
 
-If you'd like, I can run migrations and seed the database next. Want me to proceed?
